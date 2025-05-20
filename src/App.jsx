@@ -368,15 +368,6 @@ export default function RasporedProfesora() {
                             >
                                 Druga smjena
                             </MenuItem>
-                            <MenuItem
-                                onClick={() => {
-                                    window.open("https://github.com/devraiin", "_blank");
-                                }}
-                            >
-                                <GitHubIcon sx={{ marginRight: 1 }} />
-                                GitHub
-                            </MenuItem>
-                            <MenuItem onClick={handleRawJsonDialogToggle}>Prikaži RAW JSON</MenuItem>
                         </Menu>
                     </Toolbar>
                 </AppBar>
