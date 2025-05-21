@@ -87,24 +87,19 @@ export default function RasporedProfesora() {
         const saved = localStorage.getItem("darkMode");
         return saved ? JSON.parse(saved) : false;
     });
-
     const [selektovaniProfesor, setselektovaniProfesor] = useState(() => {
         const saved = localStorage.getItem("selektovaniProfesor");
         return saved ? JSON.parse(saved) : null; 
     });
-
     const [filterRazred, setFilterRazred] = useState(() => {
         return localStorage.getItem("filterRazred") || ""; 
     });
-
     const [filterUcionica, setFilterUcionica] = useState(() => {
         return localStorage.getItem("filterUcionica") || ""; 
     });
-
     const [selektovanaSmjena, setselektovanaSmjena] = useState(() => {
         return localStorage.getItem("selektovanaSmjena") || "prvaSmjena"; 
     });
-
     const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
     const [filterDialogOpen, setFilterDialogOpen] = useState(false);
     const [rawJsonDialogOpen, setRawJsonDialogOpen] = useState(false);
@@ -124,27 +119,23 @@ export default function RasporedProfesora() {
             body2: { fontSize: "0.875rem" },
         }
     }), [darkMode]);
-
+    // za updatovanje opcija,
     useEffect(() => {
         localStorage.setItem("darkMode", JSON.stringify(darkMode));
     }, [darkMode]);
-
     useEffect(() => {
         localStorage.setItem("selektovaniProfesor", JSON.stringify(selektovaniProfesor));
     }, [selektovaniProfesor]);
-
     useEffect(() => {
         localStorage.setItem("filterRazred", filterRazred);
     }, [filterRazred]);
-
     useEffect(() => {
         localStorage.setItem("filterUcionica", filterUcionica);
     }, [filterUcionica]);
-
     useEffect(() => {
         localStorage.setItem("selektovanaSmjena", selektovanaSmjena);
     }, [selektovanaSmjena]);
-
+    // TODO: dodati podrsku za obije smjene da je dobro
 
     const izracunajSljedeciCas = (professor) => {
         if (!professor) {
