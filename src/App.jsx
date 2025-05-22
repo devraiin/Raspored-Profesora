@@ -29,7 +29,8 @@ import { styled, ThemeProvider, createTheme } from "@mui/material/styles";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Brightness5Icon from "@mui/icons-material/Brightness5";
 import NightsStayIcon from "@mui/icons-material/NightsStay";
-import rasporedProfesora from "./raspored_profesora_novi.json";
+import smjenaA from "./raspored_profesora_smjena_a.json";
+import smjenaB from "./raspored_profesora_smjena_b.json";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 const idDana = {
@@ -40,26 +41,26 @@ const idDana = {
     pet: "Petak",
 };
 
-const smjenaCasovi = {
-    prvaSmjena: [
-        { start: "07:45", end: "08:30" },
-        { start: "08:35", end: "09:20" },
-        { start: "09:25", end: "10:10" },
-        { start: "10:25", end: "11:10" },
-        { start: "11:15", end: "12:00" },
-        { start: "12:05", end: "12:50" },
-        { start: "12:55", end: "13:40" }
-    ],
-    drugaSmjena: [
-        { start: "13:45", end: "14:30" },
-        { start: "14:35", end: "15:20" },
-        { start: "15:25", end: "16:10" },
-        { start: "16:25", end: "17:10" },
-        { start: "17:15", end: "18:00" },
-        { start: "18:05", end: "18:50" },
-        { start: "18:55", end: "19:40" }
-    ]
-};
+// const smjenaCasovi = {
+//     prvaSmjena: [
+//         { start: "07:45", end: "08:30" },
+//         { start: "08:35", end: "09:20" },
+//         { start: "09:25", end: "10:10" },
+//         { start: "10:25", end: "11:10" },
+//         { start: "11:15", end: "12:00" },
+//         { start: "12:05", end: "12:50" },
+//         { start: "12:55", end: "13:40" }
+//     ],
+//     drugaSmjena: [
+//         { start: "13:45", end: "14:30" },
+//         { start: "14:35", end: "15:20" },
+//         { start: "15:25", end: "16:10" },
+//         { start: "16:25", end: "17:10" },
+//         { start: "17:15", end: "18:00" },
+//         { start: "18:05", end: "18:50" },
+//         { start: "18:55", end: "19:40" }
+//     ]
+// };
 
 const darkModeDugme = styled("div")(({ theme, darkMode }) => ({
     display: "flex",
@@ -88,11 +89,6 @@ export default function RasporedProfesora() {
         return saved ? JSON.parse(saved) : false;
     });
 
-    const [selektovaniProfesor, setselektovaniProfesor] = useState(() => {
-        const saved = localStorage.getItem("selektovaniProfesor");
-        return saved ? JSON.parse(saved) : null;
-    });
-
     const [filterRazred, setFilterRazred] = useState(() => {
         return localStorage.getItem("filterRazred") || "";
     });
@@ -102,14 +98,24 @@ export default function RasporedProfesora() {
     });
 
     const [selektovanaSmjena, setselektovanaSmjena] = useState(() => {
-        return localStorage.getItem("selektovanaSmjena") || "prvaSmjena";
+        return localStorage.getItem("selektovanaSmjena") || "smjenaA";
     });
+    const [trenutniRaspored, setTrenutniRaspored] = useState(() =>
+        selektovanaSmjena === "smjenaA" ? smjenaA || [] : smjenaB || []
+    );
+    const [selektovaniProfesor, setselektovaniProfesor] = useState(() => {
+        const saved = localStorage.getItem("selektovaniProfesor");
+        return saved
+            ? JSON.parse(saved)
+            : (selektovanaSmjena === "smjenaA" ? smjenaA[0] : smjenaB[0]);
+    });
+
 
     const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
     const [filterDialogOpen, setFilterDialogOpen] = useState(false);
     const [rawJsonDialogOpen, setRawJsonDialogOpen] = useState(false);
-    const [sljedeciCas, setSljedeciCas] = useState(null);
-    const [doSljedecegCasa, setdoSljedecegCasa] = useState(""); // nije koristeno
+    // const [sljedeciCas, setSljedeciCas] = useState(null);
+    // const [doSljedecegCasa, setdoSljedecegCasa] = useState(""); // nije koristeno
 
 
     const handleRawJsonDialogToggle = () => {
@@ -146,113 +152,113 @@ export default function RasporedProfesora() {
     }, [selektovanaSmjena]);
 
 
-    const izracunajSljedeciCas = (professor) => {
-        if (!professor) {
-            setSljedeciCas(null);
-            setdoSljedecegCasa("");
-            return;
-        }
+    // const izracunajSljedeciCas = (professor) => {
+    //     if (!professor) {
+    //         setSljedeciCas(null);
+    //         setdoSljedecegCasa("");
+    //         return;
+    //     }
+    //
+    //     const infoProfesora = trenutniRaspored.find((p) => p.ime === professor.ime);
+    //     if (!infoProfesora) {
+    //         setSljedeciCas(null);
+    //         setdoSljedecegCasa("");
+    //         return;
+    //     }
+    //
+    //     const selekcijaSmjene = localStorage.getItem("selektovanaSmjena") || "prvaSmjena";
+    //     const smjenaCasoviList = smjenaCasovi[selekcijaSmjene];
+    //
+    //     const danas = new Date();
+    //     const danasIndex = danas.getDay();
+    //     const daniSedmice = ["ned", "pon", "uto", "sri", "cet", "pet", "sub"];
+    //     const danasKey = daniSedmice[danasIndex];
+    //
+    //     const infoSelektovanogDana = infoProfesora.dani.find((day) => day.dan === danasKey);
+    //
+    //     if (!infoSelektovanogDana) {
+    //         setSljedeciCas(null);
+    //         setdoSljedecegCasa("");
+    //         return;
+    //     }
+    //
+    //     const sadasnjica = new Date();
+    //     let pronjadenNoviCas = null;
+    //
+    //     for (let i = 0; i < smjenaCasoviList.length; i++) {
+    //         const razredKey = `cas${i + 1}razred`;
+    //         const ucionicaKey = `cas${i + 1}ucionica`;
+    //
+    //         if (!infoSelektovanogDana[razredKey] || !infoSelektovanogDana[ucionicaKey]) {
+    //             continue;
+    //         }
+    //
+    //         const [satCasa, minutaCasa] = smjenaCasoviList[i].start.split(":").map(Number);
+    //         const vrijemeCasa = new Date();
+    //         vrijemeCasa.setHours(satCasa, minutaCasa, 0, 0);
+    //
+    //         if (vrijemeCasa > sadasnjica) {
+    //             pronjadenNoviCas = {
+    //                 day: danasKey,
+    //                 time: smjenaCasoviList[i].start,
+    //                 razred: infoSelektovanogDana[razredKey],
+    //                 ucionica: infoSelektovanogDana[ucionicaKey],
+    //             };
+    //             break;
+    //         }
+    //     }
+    //
+    //     if (pronjadenNoviCas) {
+    //         setSljedeciCas(pronjadenNoviCas);
+    //
+    //         const [nextsatCasa, nextminutaCasa] = pronjadenNoviCas.time.split(":").map(Number);
+    //         const nextvrijemeCasa = new Date();
+    //         nextvrijemeCasa.setHours(nextsatCasa, nextminutaCasa, 0, 0);
+    //
+    //         const razlikaVremena = Math.max(0, Math.floor((nextvrijemeCasa - sadasnjica) / 1000));
+    //         const satiOstalo = Math.floor(razlikaVremena / 3600);
+    //         const minutaOstalo = Math.floor((razlikaVremena % 3600) / 60);
+    //         const sekundiOstalo = razlikaVremena % 60;
+    //
+    //         const formatiranoVrijeme = `${satiOstalo.toString().padStart(2, "0")}:${minutaOstalo
+    //             .toString()
+    //             .padStart(2, "0")}:${sekundiOstalo.toString().padStart(2, "0")}`;
+    //         setdoSljedecegCasa(formatiranoVrijeme);
+    //     } else {
+    //         setSljedeciCas(null);
+    //         setdoSljedecegCasa("");
+    //     }
+    // };
 
-        const infoProfesora = rasporedProfesora.find((p) => p.ime === professor.ime);
-        if (!infoProfesora) {
-            setSljedeciCas(null);
-            setdoSljedecegCasa("");
-            return;
-        }
+    // useEffect(() => {
+    //     if (!sljedeciCas) return;
+    //
+    //     const interval = setInterval(() => {
+    //         const sadasnjica = new Date();
+    //         const nextvrijemeCasa = new Date();
+    //         const [hours, minutes] = sljedeciCas.time.split(":").map(Number);
+    //
+    //         nextvrijemeCasa.setHours(hours, minutes, 0, 0);
+    //
+    //         const razlikaVremena = Math.max(0, Math.floor((nextvrijemeCasa - sadasnjica) / 1000)); // duplikat jer nije radilo 16/5/25 - amar
+    //
+    //         const satiOstalo = Math.floor(razlikaVremena / 3600);
+    //         const minutaOstalo = Math.floor((razlikaVremena % 3600) / 60);
+    //         const sekundiOstalo = razlikaVremena % 60;
+    //
+    //         const formatiranoVrijeme = `${satiOstalo.toString().padStart(2, "0")}:${minutaOstalo
+    //             .toString()
+    //             .padStart(2, "0")}:${sekundiOstalo.toString().padStart(2, "0")}`;
+    //
+    //         setdoSljedecegCasa(formatiranoVrijeme);
+    //     }, 1000);
+    //
+    //     return () => clearInterval(interval);
+    // }, [sljedeciCas]);
 
-        const selekcijaSmjene = localStorage.getItem("selektovanaSmjena") || "prvaSmjena";
-        const smjenaCasoviList = smjenaCasovi[selekcijaSmjene];
-
-        const danas = new Date();
-        const danasIndex = danas.getDay(); 
-        const daniSedmice = ["ned", "pon", "uto", "sri", "cet", "pet", "sub"];
-        const danasKey = daniSedmice[danasIndex];
-
-        const infoSelektovanogDana = infoProfesora.dani.find((day) => day.dan === danasKey);
-
-        if (!infoSelektovanogDana) {
-            setSljedeciCas(null);
-            setdoSljedecegCasa("");
-            return;
-        }
-
-        const sadasnjica = new Date();
-        let pronjadenNoviCas = null;
-
-        for (let i = 0; i < smjenaCasoviList.length; i++) {
-            const razredKey = `cas${i + 1}razred`;
-            const ucionicaKey = `cas${i + 1}ucionica`;
-
-            if (!infoSelektovanogDana[razredKey] || !infoSelektovanogDana[ucionicaKey]) {
-                continue;
-            }
-
-            const [satCasa, minutaCasa] = smjenaCasoviList[i].start.split(":").map(Number);
-            const vrijemeCasa = new Date();
-            vrijemeCasa.setHours(satCasa, minutaCasa, 0, 0);
-
-            if (vrijemeCasa > sadasnjica) {
-                pronjadenNoviCas = {
-                    day: danasKey,
-                    time: smjenaCasoviList[i].start,
-                    razred: infoSelektovanogDana[razredKey],
-                    ucionica: infoSelektovanogDana[ucionicaKey],
-                };
-                break;
-            }
-        }
-
-        if (pronjadenNoviCas) {
-            setSljedeciCas(pronjadenNoviCas);
-
-            const [nextsatCasa, nextminutaCasa] = pronjadenNoviCas.time.split(":").map(Number);
-            const nextvrijemeCasa = new Date();
-            nextvrijemeCasa.setHours(nextsatCasa, nextminutaCasa, 0, 0);
-
-            const razlikaVremena = Math.max(0, Math.floor((nextvrijemeCasa - sadasnjica) / 1000)); 
-            const satiOstalo = Math.floor(razlikaVremena / 3600);
-            const minutaOstalo = Math.floor((razlikaVremena % 3600) / 60);
-            const sekundiOstalo = razlikaVremena % 60;
-
-            const formatiranoVrijeme = `${satiOstalo.toString().padStart(2, "0")}:${minutaOstalo
-                .toString()
-                .padStart(2, "0")}:${sekundiOstalo.toString().padStart(2, "0")}`;
-            setdoSljedecegCasa(formatiranoVrijeme);
-        } else {
-            setSljedeciCas(null);
-            setdoSljedecegCasa("");
-        }
-    };
-
-    useEffect(() => {
-        if (!sljedeciCas) return; 
-
-        const interval = setInterval(() => {
-            const sadasnjica = new Date();
-            const nextvrijemeCasa = new Date(); 
-            const [hours, minutes] = sljedeciCas.time.split(":").map(Number);
-
-            nextvrijemeCasa.setHours(hours, minutes, 0, 0);
-
-            const razlikaVremena = Math.max(0, Math.floor((nextvrijemeCasa - sadasnjica) / 1000)); // duplikat jer nije radilo 16/5/25 - amar
-
-            const satiOstalo = Math.floor(razlikaVremena / 3600);
-            const minutaOstalo = Math.floor((razlikaVremena % 3600) / 60);
-            const sekundiOstalo = razlikaVremena % 60;
-
-            const formatiranoVrijeme = `${satiOstalo.toString().padStart(2, "0")}:${minutaOstalo
-                .toString()
-                .padStart(2, "0")}:${sekundiOstalo.toString().padStart(2, "0")}`;
-
-            setdoSljedecegCasa(formatiranoVrijeme); 
-        }, 1000); 
-
-        return () => clearInterval(interval); 
-    }, [sljedeciCas]); 
-
-    useEffect(() => {
-        izracunajSljedeciCas(selektovaniProfesor);
-    }, [selektovaniProfesor, selektovanaSmjena]);
+    // useEffect(() => {
+    //     izracunajSljedeciCas(selektovaniProfesor);
+    // }, [selektovaniProfesor, selektovanaSmjena]);
 
     const akoJeMaliEkran = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -269,16 +275,17 @@ export default function RasporedProfesora() {
         setFilterDialogOpen((prev) => !prev);
     };
 
-    const handleShiftChange = (shift) => {
-        setselektovanaSmjena(shift);
+    const handleShiftChange = (novaSmjena) => {
+        setselektovanaSmjena(novaSmjena);
+        localStorage.setItem("selektovanaSmjena", novaSmjena);
 
-        if (selektovaniProfesor) {
-            izracunajSljedeciCas(selektovaniProfesor);
-        }
+        const noviRaspored = novaSmjena === "smjenaA" ? smjenaA : smjenaB;
+        setTrenutniRaspored(noviRaspored);
+        setselektovaniProfesor(noviRaspored[0]);
     };
 
 
-    const sortiraniProfesori = [...rasporedProfesora].sort((a, b) =>
+    const sortiraniProfesori = [...trenutniRaspored].sort((a, b) =>
         a.ime.localeCompare(b.ime, "hr", { sensitivity: "base" })
     );
 
@@ -348,27 +355,57 @@ export default function RasporedProfesora() {
                             {darkMode ? <Brightness5Icon /> : <NightsStayIcon />}
                         </Box>
 
-                        <IconButton onClick={handleSettingsClick} sx={{ color: "inherit", ml: 2 }}>
+                        <IconButton
+                            onClick={(e) => setSettingsMenuAnchor(e.currentTarget)}
+                            sx={{ color: "inherit", ml: 2 }}
+                        >
                             <SettingsIcon />
                         </IconButton>
+
                         <Menu
                             anchorEl={settingsMenuAnchor}
                             open={Boolean(settingsMenuAnchor)}
-                            onClose={handleSettingsClose}
+                            onClose={() => setSettingsMenuAnchor(null)}
                         >
                             <MenuItem
-                                onClick={() => handleShiftChange("prvaSmjena")}
-                                selected={selektovanaSmjena === "prvaSmjena"}
+                                onClick={() => {
+                                    setselektovanaSmjena("smjenaA");
+                                    setTrenutniRaspored(smjenaA);
+                                    setSettingsMenuAnchor(null);
+                                    handleShiftChange("smjenaA");
+                                }}
+                                selected={selektovanaSmjena === "smjenaA"}
+                                sx={{
+                                    backgroundColor: selektovanaSmjena === "smjenaA" ? "primary.main" : "inherit",
+                                    color: selektovanaSmjena === "smjenaA" ? "white" : "inherit",
+                                    "&:hover": {
+                                        backgroundColor: selektovanaSmjena === "smjenaA" ? "primary.dark" : "grey.050",
+                                    },
+                                }}
                             >
-                                Prva smjena
+                                Smjena A
                             </MenuItem>
                             <MenuItem
-                                onClick={() => handleShiftChange("drugaSmjena")}
-                                selected={selektovanaSmjena === "drugaSmjena"}
+                                onClick={() => {
+                                    setselektovanaSmjena("smjenaB");
+                                    setTrenutniRaspored(smjenaB);
+                                    setSettingsMenuAnchor(null);
+                                    handleShiftChange("smjenaB");
+
+                                }}
+                                selected={selektovanaSmjena === "smjenaB"}
+                                sx={{
+                                    backgroundColor: selektovanaSmjena === "smjenaB" ? "primary.main" : "inherit",
+                                    color: selektovanaSmjena === "smjenaB" ? "white" : "inherit",
+                                    "&:hover": {
+                                        backgroundColor: selektovanaSmjena === "smjenaB" ? "primary.dark" : "grey.050",
+                                    },
+                                }}
                             >
-                                Druga smjena
+                                Smjena B
                             </MenuItem>
                         </Menu>
+
                     </Toolbar>
                 </AppBar>
 
@@ -484,9 +521,7 @@ export default function RasporedProfesora() {
                                                 const ucionica = day[`cas${i + 1}ucionica`];
                                                 return (
                                                     <TableCell key={i} align="center">
-                                                        {razred && ucionica
-                                                            ? `${razred} (${ucionica})`
-                                                            : "-"}
+                                                        {razred ? razred : "-"} {ucionica ? `(${ucionica})` : ""}
                                                     </TableCell>
                                                 );
                                             })}
@@ -506,14 +541,14 @@ export default function RasporedProfesora() {
                             textAlign: "center",
                         }}
                     >
-                        {sljedeciCas ? (
-                            <Typography variant="h7">
-                                Sljedeći čas: {idDana[sljedeciCas.day]} u {sljedeciCas.time}, učionica: {sljedeciCas.ucionica} <br />
-                                Vrijeme do početka: {doSljedecegCasa}
-                            </Typography>
-                        ) : (
-                            <Typography variant="h7">Nema više časova za danas.</Typography>
-                        )}
+                        {/*{sljedeciCas ? (*/}
+                        {/*    <Typography variant="h7">*/}
+                        {/*        Sljedeći čas: {idDana[sljedeciCas.day]} u {sljedeciCas.time}, učionica: {sljedeciCas.ucionica} <br />*/}
+                        {/*        Vrijeme do početka: {doSljedecegCasa}*/}
+                        {/*    </Typography>*/}
+                        {/*) : (*/}
+                        {/*    <Typography variant="h7">Nema više časova za danas.</Typography>*/}
+                        {/*)}*/}
                     </Box>
                 </Box>
             </Box>
