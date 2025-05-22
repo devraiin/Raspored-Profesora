@@ -90,19 +90,19 @@ export default function RasporedProfesora() {
 
     const [selektovaniProfesor, setselektovaniProfesor] = useState(() => {
         const saved = localStorage.getItem("selektovaniProfesor");
-        return saved ? JSON.parse(saved) : null; 
+        return saved ? JSON.parse(saved) : null;
     });
 
     const [filterRazred, setFilterRazred] = useState(() => {
-        return localStorage.getItem("filterRazred") || ""; 
+        return localStorage.getItem("filterRazred") || "";
     });
 
     const [filterUcionica, setFilterUcionica] = useState(() => {
-        return localStorage.getItem("filterUcionica") || ""; 
+        return localStorage.getItem("filterUcionica") || "";
     });
 
     const [selektovanaSmjena, setselektovanaSmjena] = useState(() => {
-        return localStorage.getItem("selektovanaSmjena") || "prvaSmjena"; 
+        return localStorage.getItem("selektovanaSmjena") || "prvaSmjena";
     });
 
     const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
