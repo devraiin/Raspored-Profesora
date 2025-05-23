@@ -83,6 +83,8 @@ const darkModeDugme = styled("div")(({ theme, darkMode }) => ({
     },
 }));
 
+
+
 export default function RasporedProfesora() {
     const [darkMode, setDarkMode] = useState(() => {
         const saved = localStorage.getItem("darkMode");
@@ -99,10 +101,8 @@ export default function RasporedProfesora() {
 
     const [selektovanaSmjena, setselektovanaSmjena] = useState(() => {
         return localStorage.getItem("selektovanaSmjena") || "smjenaA";
-    });
-    const [trenutniRaspored, setTrenutniRaspored] = useState(() =>
-        selektovanaSmjena === "smjenaA" ? smjenaA || [] : smjenaB || []
-    );
+    }); // TODO: ukloni ovo kasnije jer sve kvari kada se ukloni sada
+
     const [selektovaniProfesor, setselektovaniProfesor] = useState(() => {
         const saved = localStorage.getItem("selektovaniProfesor");
         return saved
@@ -111,7 +111,6 @@ export default function RasporedProfesora() {
     });
 
 
-    const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
     const [filterDialogOpen, setFilterDialogOpen] = useState(false);
     const [rawJsonDialogOpen, setRawJsonDialogOpen] = useState(false);
     // const [sljedeciCas, setSljedeciCas] = useState(null);
@@ -124,12 +123,11 @@ export default function RasporedProfesora() {
 
     const theme = useMemo(() => createTheme({
         palette: { mode: darkMode ? "dark" : "light" },
-        typography: {
-            fontSize: 14,
-            body1: { fontSize: "1rem" },
-            body2: { fontSize: "0.875rem" },
-        }
-    }), [darkMode]);
+        custom: {
+            smjenaA: darkMode ? "#276678" : "#81D4FA",
+            smjenaB: darkMode ? "#F4A261" : "#FFF59D"
+        },
+    }));
 
     useEffect(() => {
         localStorage.setItem("darkMode", JSON.stringify(darkMode));
@@ -151,6 +149,23 @@ export default function RasporedProfesora() {
         localStorage.setItem("selektovanaSmjena", selektovanaSmjena);
     }, [selektovanaSmjena]);
 
+    function getTrenutnaSmjena() {
+        const danas = new Date();
+
+        const godina = danas.getFullYear();
+        const prviSeptembar = new Date(godina, 8, 1);
+
+        if (danas < prviSeptembar) {
+            prviSeptembar.setFullYear(godina - 1);
+        }
+
+        const razlikaUDanima = Math.floor((danas - prviSeptembar) / (1000 * 60 * 60 * 24));
+
+        const brojSedmica = Math.floor(razlikaUDanima / 7);
+        const smjenaA = brojSedmica % 2 === 0;
+
+        return smjenaA ? "smjenaA" : "smjenaB";
+    }
 
     // const izracunajSljedeciCas = (professor) => {
     //     if (!professor) {
@@ -263,31 +278,47 @@ export default function RasporedProfesora() {
     const akoJeMaliEkran = useMediaQuery(theme.breakpoints.down("sm"));
 
 
-    const handleSettingsClick = (event) => {
-        setSettingsMenuAnchor(event.currentTarget);
-    };
-
-    const handleSettingsClose = () => {
-        setSettingsMenuAnchor(null);
-    };
+    // const handleSettingsClick = (event) => {
+    //     setSettingsMenuAnchor(event.currentTarget);
+    // };
+    //
+    // const handleSettingsClose = () => {
+    //     setSettingsMenuAnchor(null);
+    // };
 
     const handleFilterDialogToggle = () => {
         setFilterDialogOpen((prev) => !prev);
     };
 
-    const handleShiftChange = (novaSmjena) => {
-        setselektovanaSmjena(novaSmjena);
-        localStorage.setItem("selektovanaSmjena", novaSmjena);
-
-        const noviRaspored = novaSmjena === "smjenaA" ? smjenaA : smjenaB;
-        setTrenutniRaspored(noviRaspored);
-        setselektovaniProfesor(noviRaspored[0]);
+    const normalizeName = (name) => {
+        const parts = name.split(" ");
+        return parts.sort().join(" ").toLowerCase();
     };
 
+    const kombinovaniProfesori = useMemo(() => {
+        const sviProfesori = [...smjenaA, ...smjenaB];
 
-    const sortiraniProfesori = [...trenutniRaspored].sort((a, b) =>
-        a.ime.localeCompare(b.ime, "hr", { sensitivity: "base" })
-    );
+        const jedinstveniProfesori = [];
+        const dodatiProfesori = new Set();
+
+        sviProfesori.forEach((prof) => {
+            const normalized = normalizeName(prof.ime);
+            if (!dodatiProfesori.has(normalized)) {
+                dodatiProfesori.add(normalized);
+                jedinstveniProfesori.push(prof);
+            }
+        });
+
+        return jedinstveniProfesori;
+    }, [smjenaA, smjenaB]);
+
+
+    const sortiraniProfesori = useMemo(() => {
+        return [...kombinovaniProfesori].sort((a, b) =>
+            a.ime.localeCompare(b.ime, "hr", { sensitivity: "base" })
+        );
+    }, [kombinovaniProfesori]);
+
 
 
     const availableRazredi = selektovaniProfesor
@@ -314,27 +345,27 @@ export default function RasporedProfesora() {
         )
         : [];
 
-    const filterovaniDani = selektovaniProfesor?.dani.map((day) => {
-        const filterovaniRazredi = {};
-        Object.keys(day).forEach((key) => {
-            if (key.startsWith("cas")) {
-                const index = key.match(/\d+/)[0];
-                const razred = day[`cas${index}razred`];
-                const ucionica = day[`cas${index}ucionica`];
-                if (
-                    (!filterRazred || (razred && razred.includes(filterRazred))) &&
-                    (!filterUcionica || (ucionica && ucionica.includes(filterUcionica)))
-                ) {
-                    filterovaniRazredi[`cas${index}razred`] = razred;
-                    filterovaniRazredi[`cas${index}ucionica`] = ucionica;
-                } else {
-                    filterovaniRazredi[`cas${index}razred`] = null;
-                    filterovaniRazredi[`cas${index}ucionica`] = null;
-                }
-            }
-        });
-        return { ...day, ...filterovaniRazredi };
-    });
+    // const filterovaniDani = selektovaniProfesor?.dani.map((day) => {
+    //     const filterovaniRazredi = {};
+    //     Object.keys(day).forEach((key) => {
+    //         if (key.startsWith("cas")) {
+    //             const index = key.match(/\d+/)[0];
+    //             const razred = day[`cas${index}razred`];
+    //             const ucionica = day[`cas${index}ucionica`];
+    //             if (
+    //                 (!filterRazred || (razred && razred.includes(filterRazred))) &&
+    //                 (!filterUcionica || (ucionica && ucionica.includes(filterUcionica)))
+    //             ) {
+    //                 filterovaniRazredi[`cas${index}razred`] = razred;
+    //                 filterovaniRazredi[`cas${index}ucionica`] = ucionica;
+    //             } else {
+    //                 filterovaniRazredi[`cas${index}razred`] = null;
+    //                 filterovaniRazredi[`cas${index}ucionica`] = null;
+    //             }
+    //         }
+    //     });
+    //     return { ...day, ...filterovaniRazredi };
+    // });
 
     return (
         <ThemeProvider theme={theme}>
@@ -355,75 +386,74 @@ export default function RasporedProfesora() {
                             {darkMode ? <Brightness5Icon /> : <NightsStayIcon />}
                         </Box>
 
-                        <IconButton
-                            onClick={(e) => setSettingsMenuAnchor(e.currentTarget)}
-                            sx={{ color: "inherit", ml: 2 }}
-                        >
-                            <SettingsIcon />
-                        </IconButton>
+                        {/*<IconButton*/}
+                        {/*    onClick={(e) => setSettingsMenuAnchor(e.currentTarget)}*/}
+                        {/*    sx={{ color: "inherit", ml: 2 }}*/}
+                        {/*>*/}
+                        {/*    <SettingsIcon />*/}
+                        {/*</IconButton>*/}
 
-                        <Menu
-                            anchorEl={settingsMenuAnchor}
-                            open={Boolean(settingsMenuAnchor)}
-                            onClose={() => setSettingsMenuAnchor(null)}
-                        >
-                            <MenuItem
-                                onClick={() => {
-                                    setselektovanaSmjena("smjenaA");
-                                    setTrenutniRaspored(smjenaA);
-                                    setSettingsMenuAnchor(null);
-                                    handleShiftChange("smjenaA");
-                                }}
-                                selected={selektovanaSmjena === "smjenaA"}
-                                sx={{
-                                    backgroundColor: selektovanaSmjena === "smjenaA" ? "primary.main" : "inherit",
-                                    color: selektovanaSmjena === "smjenaA" ? "white" : "inherit",
-                                    "&:hover": {
-                                        backgroundColor: selektovanaSmjena === "smjenaA" ? "primary.dark" : "grey.050",
-                                    },
-                                }}
-                            >
-                                Smjena A
-                            </MenuItem>
-                            <MenuItem
-                                onClick={() => {
-                                    setselektovanaSmjena("smjenaB");
-                                    setTrenutniRaspored(smjenaB);
-                                    setSettingsMenuAnchor(null);
-                                    handleShiftChange("smjenaB");
+                        {/*<Menu*/}
+                        {/*    anchorEl={settingsMenuAnchor}*/}
+                        {/*    open={Boolean(settingsMenuAnchor)}*/}
+                        {/*    onClose={() => setSettingsMenuAnchor(null)}*/}
+                        {/*>*/}
+                        {/*    <MenuItem*/}
+                        {/*        onClick={() => {*/}
+                        {/*            setselektovanaSmjena("smjenaA");*/}
+                        {/*            setTrenutniRaspored(smjenaA);*/}
+                        {/*            setSettingsMenuAnchor(null);*/}
+                        {/*            handleShiftChange("smjenaA");*/}
+                        {/*        }}*/}
+                        {/*        selected={selektovanaSmjena === "smjenaA"}*/}
+                        {/*        sx={{*/}
+                        {/*            backgroundColor: selektovanaSmjena === "smjenaA" ? "primary.main" : "inherit",*/}
+                        {/*            color: selektovanaSmjena === "smjenaA" ? "white" : "inherit",*/}
+                        {/*            "&:hover": {*/}
+                        {/*                backgroundColor: selektovanaSmjena === "smjenaA" ? "primary.dark" : "grey.050",*/}
+                        {/*            },*/}
+                        {/*        }}*/}
+                        {/*    >*/}
+                        {/*        Smjena A*/}
+                        {/*    </MenuItem>*/}
+                        {/*    <MenuItem*/}
+                        {/*        onClick={() => {*/}
+                        {/*            setselektovanaSmjena("smjenaB");*/}
+                        {/*            setTrenutniRaspored(smjenaB);*/}
+                        {/*            setSettingsMenuAnchor(null);*/}
+                        {/*            handleShiftChange("smjenaB");*/}
 
-                                }}
-                                selected={selektovanaSmjena === "smjenaB"}
-                                sx={{
-                                    backgroundColor: selektovanaSmjena === "smjenaB" ? "primary.main" : "inherit",
-                                    color: selektovanaSmjena === "smjenaB" ? "white" : "inherit",
-                                    "&:hover": {
-                                        backgroundColor: selektovanaSmjena === "smjenaB" ? "primary.dark" : "grey.050",
-                                    },
-                                }}
-                            >
-                                Smjena B
-                            </MenuItem>
-                        </Menu>
+                        {/*        }}*/}
+                        {/*        selected={selektovanaSmjena === "smjenaB"}*/}
+                        {/*        sx={{*/}
+                        {/*            backgroundColor: selektovanaSmjena === "smjenaB" ? "primary.main" : "inherit",*/}
+                        {/*            color: selektovanaSmjena === "smjenaB" ? "white" : "inherit",*/}
+                        {/*            "&:hover": {*/}
+                        {/*                backgroundColor: selektovanaSmjena === "smjenaB" ? "primary.dark" : "grey.050",*/}
+                        {/*            },*/}
+                        {/*        }}*/}
+                        {/*    >*/}
+                        {/*        Smjena B*/}
+                        {/*    </MenuItem>*/}
+                        {/*</Menu>*/}
 
                     </Toolbar>
                 </AppBar>
 
                 <Box mt={4} mx={2}>
                     <FormControl fullWidth>
-                        <InputLabel id="professor-label">Profesor</InputLabel>
+                        <InputLabel id="profesor-select-label">Profesor</InputLabel>
                         <Select
-                            labelId="professor-label"
-                            id="professor-select"
-                            value={selektovaniProfesor ? selektovaniProfesor.ime : ""}
+                            labelId="profesor-select-label"
+                            value={selektovaniProfesor?.ime || ""}
                             onChange={(e) => {
                                 const selected = sortiraniProfesori.find((prof) => prof.ime === e.target.value);
                                 setselektovaniProfesor(selected);
                             }}
                         >
-                            {sortiraniProfesori.map((professor) => (
-                                <MenuItem key={professor.id} value={professor.ime}>
-                                    {professor.ime}
+                            {sortiraniProfesori.map((profesor, index) => (
+                                <MenuItem key={index} value={profesor.ime}>
+                                    {profesor.ime}
                                 </MenuItem>
                             ))}
                         </Select>
@@ -513,15 +543,43 @@ export default function RasporedProfesora() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {filterovaniDani.map((day, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{idDana[day.dan]}</TableCell>
-                                            {[...Array(7)].map((_, i) => {
-                                                const razred = day[`cas${i + 1}razred`];
-                                                const ucionica = day[`cas${i + 1}ucionica`];
+                                    {Object.entries(idDana).map(([danKey, danName]) => (
+                                        <TableRow key={danKey}>
+                                            <TableCell style={{ fontWeight: "bold" }}>
+                                                {danName}
+                                            </TableCell>
+                                            {Array.from({ length: 7 }).map((_, index) => {
+                                                const casKey = `cas${index + 1}`;
+
+                                                const smjenaAData = smjenaA.find(
+                                                    (prof) => normalizeName(prof.ime) === normalizeName(selektovaniProfesor?.ime)
+                                                )?.dani.find((dan) => dan.dan === danKey);
+
+                                                const smjenaBData = smjenaB.find(
+                                                    (prof) => normalizeName(prof.ime) === normalizeName(selektovaniProfesor?.ime)
+                                                )?.dani.find((dan) => dan.dan === danKey);
+
+                                                const razredA = smjenaAData ? smjenaAData[`${casKey}razred`] : null;
+                                                const ucionicaA = smjenaAData ? smjenaAData[`${casKey}ucionica`] : null;
+
+                                                const razredB = smjenaBData ? smjenaBData[`${casKey}razred`] : null;
+                                                const ucionicaB = smjenaBData ? smjenaBData[`${casKey}ucionica`] : null;
+
+                                                const prikazA = razredA ? `${razredA} ${ucionicaA ? `(${ucionicaA})` : ""}` : null;
+                                                const prikazB = razredB ? `${razredB} ${ucionicaB ? `(${ucionicaB})` : ""}` : null;
+
                                                 return (
-                                                    <TableCell key={i} align="center">
-                                                        {razred ? razred : "-"} {ucionica ? `(${ucionica})` : ""}
+                                                    <TableCell
+                                                        key={casKey}
+                                                        align="center"
+                                                        style={{
+                                                            backgroundColor: razredA ? theme.custom.smjenaA : razredB ? theme.custom.smjenaB : "inherit",
+                                                            color: theme.palette.mode === "light" ? "#000" : "white",
+                                                        }}
+                                                    >
+                                                        {prikazA && prikazB
+                                                            ? `${prikazA} / ${prikazB}`
+                                                            : prikazA || prikazB || "-"}
                                                     </TableCell>
                                                 );
                                             })}
@@ -549,6 +607,45 @@ export default function RasporedProfesora() {
                         {/*) : (*/}
                         {/*    <Typography variant="h7">Nema više časova za danas.</Typography>*/}
                         {/*)}*/}
+                    </Box>
+
+                    <Box sx={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                marginRight: 2,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    backgroundColor: theme.custom.smjenaA,
+                                    marginRight: 1,
+                                    border: "1px solid black",
+                                }}
+                            />
+                            <Typography variant="body2">Smjena A</Typography>
+                        </Box>
+
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    backgroundColor: theme.custom.smjenaB,
+                                    marginRight: 1,
+                                    border: "1px solid black",
+                                }}
+                            />
+                            <Typography variant="body2">Smjena B</Typography>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
